@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<title>VAULT — Archivo Visual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Unbounded:wght@300;400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --bg2: #111111;
+    --bg3: #1a1a1a;
+    --border: #2a2a2a;
+    --border-bright: #3d3d3d;
+    --text: #e8e4dc;
+    --text-dim: #666;
+    --text-muted: #444;
+    --accent: #c8f135;
+    --accent-dim: #8aab1e;
+    --accent2: #ff6b35;
+    --red: #ff3b3b;
+    --font-display: 'Unbounded', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+    --font-body: 'DM Sans', sans-serif;
+    --radius: 2px;
+    --radius-lg: 4px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── SCAN LINE EFFECT ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,10,10,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 18px;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .logo span {
+    color: var(--text-dim);
+    font-weight: 300;
+    font-size: 10px;
+    display: block;
+    letter-spacing: 0.3em;
+    margin-top: -2px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .count-badge {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    letter-spacing: 0.1em;
+  }
+
+  /* ─── AUTH SCREEN ─── */
+  #auth-screen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    gap: 32px;
+  }
+
+  .auth-box {
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    padding: 48px 40px;
+    max-width: 440px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .auth-logo {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 42px;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .auth-sub {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 40px;
+  }
+
+  .auth-desc {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-bottom: 36px;
+  }
+
+  .btn-google {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 24px;
+    background: var(--accent);
+    color: #0a0a0a;
+    border: none;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-google:hover {
+    background: #d4ff40;
+    transform: translateY(-1px);
+  }
+
+  .btn-google:active { transform: translateY(0); }
+
+  .auth-note {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 20px;
+    line-height: 1.6;
+  }
+
+  /* ─── MAIN APP ─── */
+  #app { display: none; }
+
+  /* ─── TOOLBAR ─── */
+  .toolbar {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    background: var(--bg2);
+  }
+
+  .search-wrap {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+  }
+
+  .search-wrap input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 8px 12px 8px 36px;
+    outline: none;
+    transition: border-color 0.15s;
+    letter-spacing: 0.05em;
+  }
+
+  .search-wrap input:focus { border-color: var(--accent); }
+  .search-wrap input::placeholder { color: var(--text-muted); }
+
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .filter-scroll {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    flex: 2;
+    scrollbar-width: none;
+  }
+  .filter-scroll::-webkit-scrollbar { display: none; }
+
+  .filter-chip {
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.1s;
+    text-transform: uppercase;
+  }
+
+  .filter-chip:hover { border-color: var(--border-bright); color: var(--text); }
+  .filter-chip.active { border-color: var(--accent); color: var(--accent); background: rgba(200,241,53,0.06); }
+
+  .btn-add {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    background: var(--accent);
+    color: #0a0a0a;
+    border: none;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .btn-add:hover { background: #d4ff40; }
+
+  /* ─── GRID ─── */
+  .grid-container {
+    padding: 24px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+
+  /* ─── CARD ─── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    transition: border-color 0.15s, transform 0.15s;
+    cursor: pointer;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card:hover {
+    border-color: var(--border-bright);
+    transform: translateY(-2px);
+  }
+
+  .card-img {
+    width: 100%;
+    aspect-ratio: 16/10;
+    object-fit: cover;
+    display: block;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-img-placeholder {
+    width: 100%;
+    aspect-ratio: 16/10;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 32px;
+  }
+
+  .card-body {
+    padding: 14px 16px;
+  }
+
+  .card-cat {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    background: rgba(200,241,53,0.1);
+    color: var(--accent);
+    border: 1px solid rgba(200,241,53,0.2);
+    margin-bottom: 10px;
+  }
+
+  .card-notes {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin-bottom: 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .card-date {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  .card-url {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent-dim);
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 180px;
+  }
+
+  .card-url:hover { color: var(--accent); }
+
+  /* ─── EMPTY STATE ─── */
+  .empty {
+    text-align: center;
+    padding: 80px 24px;
+    color: var(--text-muted);
+  }
+
+  .empty-icon { font-size: 48px; margin-bottom: 16px; }
+
+  .empty h3 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .empty p {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.open {
+    display: flex;
+  }
+
+  @media (min-width: 600px) {
+    .modal-overlay { align-items: center; }
+    .modal { max-width: 560px; border-radius: 0; max-height: 90vh; }
+  }
+
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border-bright);
+    border-bottom: none;
+    width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+    animation: slideUp 0.25s ease;
+  }
+
+  @media (min-width: 600px) {
+    .modal { border-bottom: 1px solid var(--border-bright); }
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--bg2);
+    z-index: 1;
+  }
+
+  .modal-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .modal-close {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s;
+  }
+
+  .modal-close:hover { border-color: var(--red); color: var(--red); }
+
+  .modal-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ─── UPLOAD ZONE ─── */
+  .upload-zone {
+    border: 2px dashed var(--border-bright);
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(200,241,53,0.04);
+  }
+
+  .upload-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .upload-icon { font-size: 32px; margin-bottom: 12px; }
+
+  .upload-text {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+  }
+
+  .upload-preview {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    display: none;
+  }
+
+  /* ─── FORM ─── */
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .form-input, .form-textarea, .form-select {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+    letter-spacing: 0.05em;
+    -webkit-appearance: none;
+    border-radius: 0;
+  }
+
+  .form-input:focus, .form-textarea:focus, .form-select:focus {
+    border-color: var(--accent);
+  }
+
+  .form-input::placeholder, .form-textarea::placeholder {
+    color: var(--text-muted);
+  }
+
+  .form-textarea {
+    resize: vertical;
+    min-height: 80px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    letter-spacing: 0;
+    line-height: 1.5;
+  }
+
+  /* ─── CATEGORY SELECTOR ─── */
+  .cat-input-wrap {
+    display: flex;
+    gap: 8px;
+  }
+
+  .cat-input-wrap .form-input { flex: 1; }
+
+  /* existing cats pills */
+  .existing-cats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .cat-pill {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.1s;
+  }
+
+  .cat-pill:hover { border-color: var(--accent); color: var(--accent); }
+  .cat-pill.selected { border-color: var(--accent); color: var(--accent); background: rgba(200,241,53,0.08); }
+
+  /* ─── BTN SUBMIT ─── */
+  .btn-submit {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: #0a0a0a;
+    border: none;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .btn-submit:hover { background: #d4ff40; }
+  .btn-submit:disabled { background: var(--bg3); color: var(--text-muted); cursor: not-allowed; }
+
+  /* ─── DETAIL MODAL ─── */
+  #detail-modal .modal {
+    max-width: 680px;
+  }
+
+  .detail-img {
+    width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+    background: var(--bg3);
+    display: block;
+  }
+
+  .detail-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .detail-cat {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .detail-notes {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-dim);
+  }
+
+  .detail-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .detail-date {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .detail-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-danger {
+    padding: 6px 14px;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+
+  .btn-danger:hover { border-color: var(--red); color: var(--red); }
+
+  /* ─── TOAST ─── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--bg3);
+    border: 1px solid var(--border-bright);
+    padding: 12px 20px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--text);
+    z-index: 999;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: var(--accent); }
+  .toast.error { border-color: var(--red); }
+
+  /* ─── LOADING ─── */
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(200,241,53,0.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── MOBILE ─── */
+  @media (max-width: 600px) {
+    .toolbar { padding: 12px 16px; }
+    .grid-container { padding: 16px; }
+    .grid { grid-template-columns: 1fr; gap: 12px; }
+    .auth-box { padding: 32px 24px; }
+    .auth-logo { font-size: 32px; }
+    .modal-body { padding: 16px; }
+    header { padding: 0 16px; }
+    .btn-add span { display: none; }
+  }
+
+  /* ─── DRIVE STATUS ─── */
+  .drive-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+  }
+
+  .drive-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-muted);
+  }
+
+  .drive-dot.connected { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+
+  /* ─── USER PILL ─── */
+  .user-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    background: var(--bg3);
+    cursor: pointer;
+    transition: border-color 0.1s;
+  }
+
+  .user-pill:hover { border-color: var(--border-bright); }
+
+  .user-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    color: #0a0a0a;
+    font-family: var(--font-display);
+    overflow: hidden;
+  }
+
+  .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+  .user-name {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── AUTH ─── -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">VAULT</div>
+    <div class="auth-sub">Archivo Visual Personal</div>
+    <p class="auth-desc">Guarda capturas de pantalla desde cualquier dispositivo, categorízalas y accede desde el computador. Todo se almacena en tu Google Drive.</p>
+    <button class="btn-google" onclick="signIn()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Conectar con Google Drive
+    </button>
+    <p class="auth-note">Tus archivos permanecen en tu Drive.<br>VAULT crea una carpeta "VAULT_Archive" para organizarlo todo.</p>
+  </div>
+</div>
+
+<!-- ─── MAIN APP ─── -->
+<div id="app">
+  <header>
+    <div>
+      <div class="logo">VAULT <span>Archivo Visual</span></div>
+    </div>
+    <div class="header-right">
+      <div class="drive-status">
+        <div class="drive-dot connected" id="drive-dot"></div>
+        <span id="drive-label">Drive</span>
+      </div>
+      <div class="count-badge" id="count-badge">0 items</div>
+      <div class="user-pill" onclick="showUserMenu()">
+        <div class="user-avatar" id="user-avatar">M</div>
+        <span class="user-name" id="user-name">Usuario</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="search-input" placeholder="Buscar notas, categorías..." oninput="filterItems()">
+    </div>
+    <div class="filter-scroll" id="filter-chips">
+      <button class="filter-chip active" data-cat="ALL" onclick="filterBycat(this)">Todo</button>
+    </div>
+    <button class="btn-add" onclick="openAddModal()">
+      <span>＋</span>
+      <span>Agregar</span>
+    </button>
+  </div>
+
+  <div class="grid-container">
+    <div class="grid" id="main-grid"></div>
+    <div class="empty" id="empty-state" style="display:none">
+      <div class="empty-icon">◻</div>
+      <h3>Archivo vacío</h3>
+      <p>Agrega tu primera captura de pantalla<br>usando el botón de arriba.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ─── ADD MODAL ─── -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Nueva captura</span>
+      <button class="modal-close" onclick="closeAddModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Upload -->
+      <div class="form-group">
+        <label class="form-label">Imagen *</label>
+        <div class="upload-zone" id="upload-zone">
+          <input type="file" accept="image/*" id="img-input" onchange="handleImageSelect(event)">
+          <img class="upload-preview" id="upload-preview">
+          <div id="upload-placeholder">
+            <div class="upload-icon">⊕</div>
+            <div class="upload-text">Toca para subir captura de pantalla</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category -->
+      <div class="form-group">
+        <label class="form-label">Categoría *</label>
+        <div class="cat-input-wrap">
+          <input type="text" class="form-input" id="cat-input" placeholder="Ej: PRODUCTOS_MUEBLES" oninput="onCatInput(this)">
+        </div>
+        <div class="existing-cats" id="existing-cats"></div>
+      </div>
+
+      <!-- URL -->
+      <div class="form-group">
+        <label class="form-label">URL (opcional)</label>
+        <input type="url" class="form-input" id="url-input" placeholder="https://...">
+      </div>
+
+      <!-- Notes -->
+      <div class="form-group">
+        <label class="form-label">Notas</label>
+        <textarea class="form-textarea" id="notes-input" placeholder="¿Por qué guardaste esto? ¿Qué te llamó la atención?"></textarea>
+      </div>
+
+      <button class="btn-submit" id="save-btn" onclick="saveItem()">
+        <div class="spinner" id="save-spinner" style="display:none"></div>
+        <span id="save-label">Guardar en Drive</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── DETAIL MODAL ─── -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <span class="modal-title" id="detail-cat-title">—</span>
+      <button class="modal-close" onclick="closeDetailModal()">✕</button>
+    </div>
+    <img class="detail-img" id="detail-img" src="" alt="">
+    <div class="detail-body">
+      <div id="detail-notes" class="detail-notes"></div>
+      <div class="detail-meta">
+        <span class="detail-date" id="detail-date"></span>
+        <div class="detail-actions">
+          <a id="detail-url-link" href="#" target="_blank" class="btn-danger" style="text-decoration:none;display:none">↗ URL</a>
+          <button class="btn-danger" onclick="deleteCurrentItem()">✕ Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── TOAST ─── -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────
+// CONFIG — reemplaza con tu Client ID real
+// ─────────────────────────────────────────
+const CLIENT_ID = '773433863407-4okjr44953fceu1dreg8ib5p22tjlm4v.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+const FOLDER_NAME = 'VAULT_Archive';
+const DATA_FILE = 'vault_data.json';
+
+// ─────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────
+let tokenClient = null;
+let accessToken = null;
+let items = [];
+let categories = new Set();
+let currentFilter = 'ALL';
+let currentDetailId = null;
+let folderId = null;
+let dataFileId = null;
+let selectedImageFile = null;
+let selectedImageDataURL = null;
+
+// ─────────────────────────────────────────
+// GOOGLE IDENTITY & DRIVE
+// ─────────────────────────────────────────
+window.onload = () => {
+  loadGoogleScript();
+};
+
+function loadGoogleScript() {
+  const s = document.createElement('script');
+  s.src = 'https://accounts.google.com/gsi/client';
+  s.onload = initGoogle;
+  document.head.appendChild(s);
+}
+
+function initGoogle() {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: async (resp) => {
+      if (resp.error) { showToast('Error de autenticación', 'error'); return; }
+      accessToken = resp.access_token;
+      await initApp();
+    }
+  });
+}
+
+function signIn() {
+  if (CLIENT_ID === 'DEMO_MODE_ONLY') {
+    // Demo mode sin Drive real
+    demoMode();
+    return;
+  }
+  tokenClient.requestAccessToken();
+}
+
+// ─── DEMO MODE (sin configurar Drive) ────
+function demoMode() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('drive-dot').classList.remove('connected');
+  document.getElementById('drive-label').textContent = 'DEMO';
+  document.getElementById('user-name').textContent = 'Demo';
+  document.getElementById('user-avatar').textContent = 'D';
+
+  // Cargar items demo desde localStorage
+  const saved = localStorage.getItem('vault_demo');
+  if (saved) {
+    items = JSON.parse(saved);
+    items.forEach(it => categories.add(it.category));
+  }
+  renderAll();
+  showToast('Modo demo: datos guardados localmente', 'success');
+}
+
+function saveDemoData() {
+  localStorage.setItem('vault_demo', JSON.stringify(items));
+}
+
+// ─── INIT APP ────────────────────────────
+async function initApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  try {
+    // Get user info
+    const uinfo = await gfetch('https://www.googleapis.com/oauth2/v2/userinfo');
+    document.getElementById('user-name').textContent = uinfo.name?.split(' ')[0] || uinfo.email;
+    const av = document.getElementById('user-avatar');
+    if (uinfo.picture) {
+      av.innerHTML = `<img src="${uinfo.picture}" alt="">`;
+    } else {
+      av.textContent = (uinfo.name || 'U')[0].toUpperCase();
+    }
+
+    // Setup folder & data
+    await setupDrive();
+    renderAll();
+    showToast('Conectado a Drive ✓', 'success');
+  } catch(e) {
+    showToast('Error conectando a Drive', 'error');
+  }
+}
+
+async function gfetch(url, opts = {}) {
+  const r = await fetch(url, {
+    ...opts,
+    headers: { Authorization: `Bearer ${accessToken}`, ...(opts.headers || {}) }
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function setupDrive() {
+  // Find or create folder
+  const folderRes = await gfetch(
+    `https://www.googleapis.com/drive/v3/files?q=name='${FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false&fields=files(id,name)`
+  );
+  if (folderRes.files.length > 0) {
+    folderId = folderRes.files[0].id;
+  } else {
+    const f = await gfetch('https://www.googleapis.com/drive/v3/files', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' })
+    });
+    folderId = f.id;
+  }
+
+  // Find or create data JSON
+  const dataRes = await gfetch(
+    `https://www.googleapis.com/drive/v3/files?q=name='${DATA_FILE}' and '${folderId}' in parents and trashed=false&fields=files(id,name)`
+  );
+  if (dataRes.files.length > 0) {
+    dataFileId = dataRes.files[0].id;
+    const content = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${dataFileId}?alt=media`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    items = await content.json();
+    items.forEach(it => categories.add(it.category));
+  } else {
+    // Create empty data file
+    await uploadJSON([]);
+  }
+}
+
+async function uploadJSON(data) {
+  const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+  const form = new FormData();
+  form.append('metadata', new Blob([JSON.stringify({
+    name: DATA_FILE,
+    mimeType: 'application/json',
+    ...(dataFileId ? {} : { parents: [folderId] })
+  })], { type: 'application/json' }));
+  form.append('file', blob);
+
+  const url = dataFileId
+    ? `https://www.googleapis.com/upload/drive/v3/files/${dataFileId}?uploadType=multipart`
+    : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+
+  const r = await fetch(url, {
+    method: dataFileId ? 'PATCH' : 'POST',
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: form
+  });
+  const result = await r.json();
+  if (!dataFileId) dataFileId = result.id;
+}
+
+async function uploadImage(file, id) {
+  const form = new FormData();
+  form.append('metadata', new Blob([JSON.stringify({
+    name: `vault_${id}.jpg`,
+    parents: [folderId]
+  })], { type: 'application/json' }));
+  form.append('file', file);
+
+  const r = await fetch(
+    'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webContentLink',
+    { method: 'POST', headers: { Authorization: `Bearer ${accessToken}` }, body: form }
+  );
+  return r.json();
+}
+
+async function deleteImageFromDrive(fileId) {
+  await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${accessToken}` }
+  });
+}
+
+// ─────────────────────────────────────────
+// SAVE ITEM
+// ─────────────────────────────────────────
+async function saveItem() {
+  const cat = document.getElementById('cat-input').value.trim().toUpperCase().replace(/\s+/g, '_');
+  const url = document.getElementById('url-input').value.trim();
+  const notes = document.getElementById('notes-input').value.trim();
+
+  if (!selectedImageFile && !selectedImageDataURL) { showToast('Selecciona una imagen', 'error'); return; }
+  if (!cat) { showToast('Escribe una categoría', 'error'); return; }
+
+  setSaving(true);
+
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const now = new Date().toISOString();
+
+  let item = { id, category: cat, url, notes, date: now, imageDataURL: null, driveImageId: null };
+
+  if (accessToken && folderId) {
+    try {
+      const imgResult = await uploadImage(selectedImageFile, id);
+      item.driveImageId = imgResult.id;
+      // Store thumbnail as base64 for quick display
+      item.imageDataURL = selectedImageDataURL;
+      items.unshift(item);
+      await uploadJSON(items);
+    } catch(e) {
+      showToast('Error subiendo imagen', 'error');
+      setSaving(false);
+      return;
+    }
+  } else {
+    // Demo: store base64
+    item.imageDataURL = selectedImageDataURL;
+    items.unshift(item);
+    saveDemoData();
+  }
+
+  categories.add(cat);
+  renderAll();
+  closeAddModal();
+  showToast(`Guardado en ${cat} ✓`, 'success');
+  setSaving(false);
+}
+
+function setSaving(v) {
+  document.getElementById('save-btn').disabled = v;
+  document.getElementById('save-spinner').style.display = v ? 'block' : 'none';
+  document.getElementById('save-label').textContent = v ? 'Guardando...' : 'Guardar en Drive';
+}
+
+// ─────────────────────────────────────────
+// DELETE
+// ─────────────────────────────────────────
+async function deleteCurrentItem() {
+  if (!currentDetailId) return;
+  const item = items.find(i => i.id === currentDetailId);
+  if (!item) return;
+  if (!confirm('¿Eliminar este item?')) return;
+
+  if (accessToken && item.driveImageId) {
+    await deleteImageFromDrive(item.driveImageId).catch(() => {});
+  }
+
+  items = items.filter(i => i.id !== currentDetailId);
+
+  if (accessToken) {
+    await uploadJSON(items);
+  } else {
+    saveDemoData();
+  }
+
+  // Rebuild categories
+  categories = new Set(items.map(i => i.category));
+  closeDetailModal();
+  renderAll();
+  showToast('Eliminado', 'success');
+}
+
+// ─────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────
+function renderAll() {
+  renderFilters();
+  renderGrid();
+  document.getElementById('count-badge').textContent = `${items.length} item${items.length !== 1 ? 's' : ''}`;
+}
+
+function renderFilters() {
+  const container = document.getElementById('filter-chips');
+  const cats = Array.from(categories).sort();
+  container.innerHTML = `<button class="filter-chip ${currentFilter === 'ALL' ? 'active' : ''}" data-cat="ALL" onclick="filterBycat(this)">Todo</button>`;
+  cats.forEach(c => {
+    const active = currentFilter === c ? 'active' : '';
+    container.innerHTML += `<button class="filter-chip ${active}" data-cat="${c}" onclick="filterBycat(this)">${c}</button>`;
+  });
+}
+
+function filterBycat(btn) {
+  currentFilter = btn.dataset.cat;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderGrid();
+}
+
+function filterItems() {
+  renderGrid();
+}
+
+function getFilteredItems() {
+  const q = document.getElementById('search-input')?.value?.toLowerCase() || '';
+  return items.filter(item => {
+    const matchCat = currentFilter === 'ALL' || item.category === currentFilter;
+    const matchSearch = !q || item.notes?.toLowerCase().includes(q) || item.category?.toLowerCase().includes(q) || item.url?.toLowerCase().includes(q);
+    return matchCat && matchSearch;
+  });
+}
+
+function renderGrid() {
+  const grid = document.getElementById('main-grid');
+  const empty = document.getElementById('empty-state');
+  const filtered = getFilteredItems();
+
+  if (filtered.length === 0) {
+    grid.style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+
+  grid.style.display = 'grid';
+  empty.style.display = 'none';
+
+  grid.innerHTML = filtered.map(item => `
+    <div class="card" onclick="openDetail('${item.id}')">
+      ${item.imageDataURL
+        ? `<img class="card-img" src="${item.imageDataURL}" alt="" loading="lazy">`
+        : `<div class="card-img-placeholder">◻</div>`}
+      <div class="card-body">
+        <div class="card-cat">${item.category}</div>
+        ${item.notes ? `<div class="card-notes">${escHtml(item.notes)}</div>` : ''}
+        <div class="card-meta">
+          <span class="card-date">${formatDate(item.date)}</span>
+          ${item.url ? `<a class="card-url" href="${escHtml(item.url)}" target="_blank" onclick="event.stopPropagation()">↗ URL</a>` : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─────────────────────────────────────────
+// DETAIL MODAL
+// ─────────────────────────────────────────
+function openDetail(id) {
+  currentDetailId = id;
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+
+  document.getElementById('detail-cat-title').textContent = item.category;
+  document.getElementById('detail-img').src = item.imageDataURL || '';
+  document.getElementById('detail-notes').textContent = item.notes || '(Sin notas)';
+  document.getElementById('detail-date').textContent = formatDate(item.date, true);
+
+  const urlLink = document.getElementById('detail-url-link');
+  if (item.url) {
+    urlLink.href = item.url;
+    urlLink.style.display = 'inline-flex';
+  } else {
+    urlLink.style.display = 'none';
+  }
+
+  document.getElementById('detail-modal').classList.add('open');
+}
+
+function closeDetailModal() {
+  document.getElementById('detail-modal').classList.remove('open');
+  currentDetailId = null;
+}
+
+// ─────────────────────────────────────────
+// ADD MODAL
+// ─────────────────────────────────────────
+function openAddModal() {
+  selectedImageFile = null;
+  selectedImageDataURL = null;
+  document.getElementById('cat-input').value = '';
+  document.getElementById('url-input').value = '';
+  document.getElementById('notes-input').value = '';
+  document.getElementById('upload-preview').style.display = 'none';
+  document.getElementById('upload-preview').src = '';
+  document.getElementById('upload-placeholder').style.display = 'block';
+  document.getElementById('img-input').value = '';
+  renderExistingCats();
+  document.getElementById('add-modal').classList.add('open');
+}
+
+function closeAddModal() {
+  document.getElementById('add-modal').classList.remove('open');
+}
+
+function handleImageSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  selectedImageFile = file;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    selectedImageDataURL = ev.target.result;
+    const preview = document.getElementById('upload-preview');
+    preview.src = selectedImageDataURL;
+    preview.style.display = 'block';
+    document.getElementById('upload-placeholder').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderExistingCats() {
+  const container = document.getElementById('existing-cats');
+  const cats = Array.from(categories).sort();
+  container.innerHTML = cats.map(c =>
+    `<button class="cat-pill" onclick="selectCat('${c}')">${c}</button>`
+  ).join('');
+}
+
+function selectCat(cat) {
+  document.getElementById('cat-input').value = cat;
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('selected'));
+  event.target.classList.add('selected');
+}
+
+function onCatInput(input) {
+  const val = input.value.toUpperCase().replace(/\s+/g, '_');
+  input.value = val;
+  // Highlight if matches existing
+  document.querySelectorAll('.cat-pill').forEach(p => {
+    p.classList.toggle('selected', p.textContent === val);
+  });
+}
+
+// ─────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatDate(iso, full = false) {
+  const d = new Date(iso);
+  if (full) return d.toLocaleDateString('es-CL', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  return d.toLocaleDateString('es-CL', { day:'2-digit', month:'short' });
+}
+
+let toastTimer;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function showUserMenu() {
+  if (!accessToken) {
+    if (confirm('¿Cerrar sesión del modo demo?')) {
+      location.reload();
+    }
+    return;
+  }
+  if (confirm('¿Cerrar sesión?')) {
+    google.accounts.oauth2.revoke(accessToken, () => location.reload());
+  }
+}
+
+// Close modals on overlay click
+document.getElementById('add-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeAddModal();
+});
+document.getElementById('detail-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeDetailModal();
+});
+
+// Drag & drop
+const zone = document.getElementById('upload-zone');
+if (zone) {
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      selectedImageFile = file;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        selectedImageDataURL = ev.target.result;
+        document.getElementById('upload-preview').src = selectedImageDataURL;
+        document.getElementById('upload-preview').style.display = 'block';
+        document.getElementById('upload-placeholder').style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+}
+</script>
+</body>
+</html>
