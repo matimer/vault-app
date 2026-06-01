@@ -964,7 +964,7 @@
 // CONFIG — reemplaza con tu Client ID real
 // ─────────────────────────────────────────
 const CLIENT_ID = '241738111927-3ch0a4harf5ge095p2mf6rr35nscie7g.apps.googleusercontent.com';
-const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile';
+const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 const FOLDER_NAME = 'VAULT_Archive';
 const DATA_FILE = 'vault_data.json';
 
@@ -1046,15 +1046,9 @@ async function initApp() {
   document.getElementById('app').style.display = 'block';
 
   try {
-    // Get user info
-    const uinfo = await gfetch('https://www.googleapis.com/oauth2/v2/userinfo');
-    document.getElementById('user-name').textContent = uinfo.name?.split(' ')[0] || uinfo.email;
-    const av = document.getElementById('user-avatar');
-    if (uinfo.picture) {
-      av.innerHTML = `<img src="${uinfo.picture}" alt="">`;
-    } else {
-      av.textContent = (uinfo.name || 'U')[0].toUpperCase();
-    }
+    document.getElementById('user-name').textContent = 'Matías';
+    document.getElementById('user-avatar').textContent = 'M';
+
 
     // Setup folder & data
     await setupDrive();
