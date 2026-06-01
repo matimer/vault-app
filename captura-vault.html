@@ -1125,14 +1125,39 @@ async function uploadJSON(data) {
   if (!dataFileId) dataFileId = result.id;
 }
 
-async function uploadImage(file, id) {
+// Cache de IDs de carpetas por categoría
+const categoryFolderCache = {};
+
+async function getCategoryFolderId(category) {
+  if (categoryFolderCache[category]) return categoryFolderCache[category];
+  const res = await gfetch(
+    `https://www.googleapis.com/drive/v3/files?q=name='${category}' and mimeType='application/vnd.google-apps.folder' and '${folderId}' in parents and trashed=false&fields=files(id,name)`
+  );
+  if (res.files.length > 0) {
+    categoryFolderCache[category] = res.files[0].id;
+    return res.files[0].id;
+  }
+  const f = await gfetch('https://www.googleapis.com/drive/v3/files', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: category,
+      mimeType: 'application/vnd.google-apps.folder',
+      parents: [folderId]
+    })
+  });
+  categoryFolderCache[category] = f.id;
+  return f.id;
+}
+
+async function uploadImage(file, id, category) {
+  const catFolderId = await getCategoryFolderId(category);
   const form = new FormData();
   form.append('metadata', new Blob([JSON.stringify({
     name: `vault_${id}.jpg`,
-    parents: [folderId]
+    parents: [catFolderId]
   })], { type: 'application/json' }));
   form.append('file', file);
-
   const r = await fetch(
     'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webContentLink',
     { method: 'POST', headers: { Authorization: `Bearer ${accessToken}` }, body: form }
@@ -1167,7 +1192,7 @@ async function saveItem() {
 
   if (accessToken && folderId) {
     try {
-      const imgResult = await uploadImage(selectedImageFile, id);
+      const imgResult = await uploadImage(selectedImageFile, id, cat);
       item.driveImageId = imgResult.id;
       // Store thumbnail as base64 for quick display
       item.imageDataURL = selectedImageDataURL;
